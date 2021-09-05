@@ -85,7 +85,11 @@
                     src: manifestUri+'/manifest.mpd',
                     type: 'application/dash+xml',
                     keySystems: {
-                        'com.widevine.alpha': widevineLicenseUri,
+                        'com.widevine.alpha': {
+                            url: widevineLicenseUri,
+                            audioRobustness: 'SW_SECURE_CRYPTO',
+                            videoRobustness: 'SW_SECURE_CRYPTO'
+                        },
                         'com.microsoft.playready': playreadyLicenseUri
                     }
                 };
