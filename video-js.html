@@ -10,6 +10,8 @@
   
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs/7.5.4/video.min.js"></script>
+    <script src="https://unpkg.com/@videojs/http-streaming/dist/videojs-http-streaming.js"></script>
+
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs-contrib-eme/3.5.4/videojs-contrib-eme.min.js"></script>
  
  
@@ -88,9 +90,13 @@
                     }
                 };
  
- 
-                // Set the source to the player to init/start the playback.
-                player.src([fairplayHlsSrc,wvprDashSrc]);
+                // Browser switch
+                 // Set the source to the player to init/start the playback.
+                if (videojs.browser.IS_ANY_SAFARI) {
+                    player.src(fairplayHlsSrc);
+                } else {
+                    player.src(wvprDashSrc);
+                }
             });
         })();
     </script>
