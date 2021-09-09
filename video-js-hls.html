@@ -8,10 +8,8 @@
  
     <link href="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs/7.5.4/video-js.min.css" rel="stylesheet">
   
-z
+    <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs/7.5.4/video.min.js"></script>
-    <script src="https://unpkg.com/@videojs/http-streaming/dist/videojs-http-streaming.js"></script>
-
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs-contrib-eme/3.5.4/videojs-contrib-eme.min.js"></script>
  
  
@@ -23,11 +21,11 @@ z
     <script type="text/javascript">
         (function() {
 
-            const manifestUri           = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
-            const hlsCertificateUrl     = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
-            const fairplayLicenseUri    = 'https://drm.adrennial.io?drm-type=fairplay';
-            const widevineLicenseUri    = 'https://drm.adrennial.io?drm-type=widevine';
-            const playreadyLicenseUri   = 'https://drm.adrennial.io?drm-type=playready';       
+            const manifestUri = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil/playlist.m3u8'
+            // let manifestUri = 'https://content.downlynk.com/f467693928ee4d27b07e02a9a728c99e.m3u8?rmt=fps&skd=0';
+            const hlsCertificateUrl = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
+            const licenseUri = 'https://drm.adrennial.io?drm-type=fairplay';
+
 
             // Init player.
             var player = videojs('my-player');
@@ -41,7 +39,7 @@ z
  
                 // Setup hls + fp
                 var fairplayHlsSrc = {
-                    src: manifestUri+'/playlist.m3u8',
+                    src: manifestUri,
                     type: 'application/x-mpegURL',
                     keySystems: {
                         'com.apple.fps.1_0': {
@@ -59,7 +57,7 @@ z
                             getLicense: function (emeOptions, contentId, keyMessage, callback) {
                                 var data = 'spc=' + base64EncodeUint8Array(keyMessage) + '&assetId=' + contentId;
                                 $.ajax({
-                                    url: fairplayLicenseUri,
+                                    url: licenseUri,
                                     type: 'POST',
                                     data: data,
                                     // If you are using proxy, please, remove 'headers' object.
@@ -78,28 +76,9 @@ z
                         }
                     }
                 };
-
-                // Setup dash + pr/wv
-                var wvprDashSrc = {
-                    src: manifestUri+'/manifest.mpd',
-                    type: 'application/dash+xml',
-                    keySystems: {
-                        'com.widevine.alpha': {
-                            url: widevineLicenseUri,
-                            audioRobustness: 'SW_SECURE_CRYPTO',
-                            videoRobustness: 'SW_SECURE_CRYPTO'
-                        },
-                        'com.microsoft.playready': playreadyLicenseUri
-                    }
-                };
  
-                // Browser switch
-                 // Set the source to the player to init/start the playback.
-                if (videojs.browser.IS_ANY_SAFARI) {
-                    player.src(fairplayHlsSrc);
-                } else {
-                    player.src(wvprDashSrc);
-                }
+                // Set the source to the player to init/start the playback.
+                player.src(fairplayHlsSrc);
             });
         })();
     </script>
