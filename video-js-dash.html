@@ -21,12 +21,6 @@
 
     <script src="https://players.brightcove.net/videojs-quality-menu/1/videojs-quality-menu.min.js"></script>
 
-
-
-    <!-- Shaka  -->
-    <script src="https://ajax.googleapis.com/ajax/libs/shaka-player/3.2.0/shaka-player.ui.js"></script>
-    <link rel="stylesheet"
-          href="https://ajax.googleapis.com/ajax/libs/shaka-player/3.2.0/controls.css">
   </head>
 
   <body>
@@ -40,79 +34,138 @@
 
     </video>
 
-
-
-    <video id="video"
-           width="640"
-           controls></video>
-
-
-    <!-- SHAKA -->
     <script type="text/javascript">
       ( () => {
 
+        var adr_player_atts = {
+          drm_fairplay_cert_url: 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der',
+          drm_fairplay_url: 'https://drm.adrennial.io?drm-type=fairplay',
+          drm_widevine_url: 'https://drm.adrennial.io?drm-type=widevine',
+          drm_playready_url: 'https://drm.adrennial.io?drm-type=playready'
+        };
+        const manifestUri = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
+        var players = document.getElementsByClassName( 'video-js' );
+        var currentPlayer = null;
+        var playerInstances = [];
+        window.HELP_IMPROVE_VIDEOJS = false;
 
-        function initApp() {
-          // Install built-in polyfills to patch browser incompatibilities.
-          shaka.polyfill.installAll();
+        // Helper functions.
+        var base64DecodeUint8Array = function ( a ) {
+          var b = window.atob( a ),
+            c = b.length,
+            d = new Uint8Array( new ArrayBuffer( c ) );
+          for ( i = 0; i < c; i++ ) d[ i ] = b.charCodeAt( i );
+          return d;
+        };
+        var base64EncodeUint8Array = function ( a ) {
+          for (
+            var d,
+            e,
+            f,
+            g,
+            h,
+            i,
+            j,
+            b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+            c = '',
+            k = 0;
+            k < a.length;
 
-          // Check to see if the browser supports the basic APIs Shaka needs.
-          if ( shaka.Player.isBrowserSupported() ) {
-            // Everything looks good!
-            initPlayer();
-          } else {
-            // This browser does not have the minimum set of APIs we need.
-            console.error( 'Browser not supported!' );
-          }
-        }
+          )
+            ( d = a[ k++ ] ),
+              ( e = k < a.length ? a[ k++ ] : Number.NaN ),
+              ( f = k < a.length ? a[ k++ ] : Number.NaN ),
+              ( g = d >> 2 ),
+              ( h = ( ( 3 & d ) << 4 ) | ( e >> 4 ) ),
+              ( i = ( ( 15 & e ) << 2 ) | ( f >> 6 ) ),
+              ( j = 63 & f ),
+              isNaN( e ) ? ( i = j = 64 ) : isNaN( f ) && ( j = 64 ),
+              ( c += b.charAt( g ) + b.charAt( h ) + b.charAt( i ) + b.charAt( j ) );
+          return c;
+        };
+        var arrayToString = function ( a ) {
+          var b = new Uint16Array( a.buffer );
+          return String.fromCharCode.apply( null, b );
+        };
 
-        async function initPlayer() {
-          // Create a Player instance.
-          const video = document.getElementById( 'video' );
-          const player = new shaka.Player( video );
+        function initPlayer( el ) {
+          var manifestUrl = manifestUri;
 
-          // Attach player to the window to make it easy to access in the JS console.
-          window.player = player;
+          var options = {
+            muted: false,
+            preload: 'auto',
+            autoplay: false,
+            loadingSpinner: true,
+            controlBar: {
+              captionsButton: false,
+              textTrackSettings: false,
+            },
+          };
+
+          // Init player.
+          var player = videojs( el.id, options );
+          // init drm plugin
+          player.eme();
+
+          player.log()
+
+          // Push into instances
+          playerInstances.push( player );
+
+          // When ready
+          player.on( 'ready', function () {
+            // Set default quality
+            player.qualityMenu( {
+              defaultResolution: 'auto',
+            } );
 
 
-          player.configure( {
-            drm: {
-              servers: {
-                'com.widevine.alpha': 'https://drm.adrennial.io?drm-type=widevine',
-                'com.microsoft.playready': 'https://drm.adrennial.io?drm-type=playready'
-              }
-            }
+            // Setup dash + pr/wv
+            var wvprDashSrc = {
+              src: manifestUrl + '/manifest.mpd',
+              type: 'application/dash+xml',
+              keySystems: {
+                'com.widevine.alpha': {
+                  url: adr_player_atts.drm_widevine_url,
+                  videoRobustness: 'SW_SECURE_CRYPTO',
+                  audioRobustness: 'SW_SECURE_CRYPTO'
+                },
+                'com.microsoft.playready': adr_player_atts.drm_playready_url,
+              },
+            };
+
+            player.src( wvprDashSrc );
           } );
 
-          // Listen for error events.
-          player.addEventListener( 'error', onErrorEvent );
+          // Sync Play and Pause
+          player.on( 'play', () => {
+            if ( currentPlayer && currentPlayer !== player ) {
+              currentPlayer.pause();
+            }
 
-          // Try to load a manifest.
-          // This is an asynchronous process.
-          try {
-            await player.load( 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil/manifest.mpd' );
-            // This runs if the asynchronous load is successful.
-            console.log( 'The video has now been loaded!' );
-          } catch ( e ) {
-            // onError is executed if the asynchronous load fails.
-            onError( e );
-          }
+            currentPlayer = player;
+          } );
+
+          player.on( 'volumechange', function ( evt ) {
+            var isMuted = currentPlayer.muted();
+
+            playerInstances.forEach( ( p ) => {
+              if ( player !== p ) {
+                p.muted( isMuted );
+              }
+            } );
+          } );
         }
 
-        function onErrorEvent( event ) {
-          // Extract the shaka.util.Error object from the event.
-          onError( event.detail );
+        for ( var i = 0; i < players.length; i++ ) {
+          initPlayer( players[ i ] );
         }
-
-        function onError( error ) {
-          // Log the error.
-          console.error( 'Error code', error.code, 'object', error );
-        }
-
-        document.addEventListener( 'DOMContentLoaded', initApp );
       } )();
 
+
+
     </script>
+
 
   </body>
 
