@@ -34,221 +34,135 @@
 
 (() => {
 
-  var adr_player_atts;
-  const manifestUri           = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
-  adr_player_atts.drm_fairplay_cert_url   = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
-  adr_player_atts.drm_fairplay_url    = 'https://drm.adrennial.io?drm-type=fairplay';
-  adr_player_atts.drm_widevine_url   = 'https://drm.adrennial.io?drm-type=widevine';
-  adr_player_atts.drm_playready_url  = 'https://drm.adrennial.io?drm-type=playready';    
+    var adr_player_atts;
+    const manifestUri           = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
+    adr_player_atts.drm_fairplay_cert_url   = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
+    adr_player_atts.drm_fairplay_url    = 'https://drm.adrennial.io?drm-type=fairplay';
+    adr_player_atts.drm_widevine_url   = 'https://drm.adrennial.io?drm-type=widevine';
+    adr_player_atts.drm_playready_url  = 'https://drm.adrennial.io?drm-type=playready';    
 
 
-  var players = document.getElementsByClassName('video-js');
-  var currentPlayer = null;
-  var playerInstances = [];
-  window.HELP_IMPROVE_VIDEOJS = false;
+    var players = document.getElementsByClassName('video-js');
+    var currentPlayer = null;
+    var playerInstances = [];
+    window.HELP_IMPROVE_VIDEOJS = false;
 
-  // Helper functions.
-  var base64DecodeUint8Array = function (a) {
-    var b = window.atob(a),
-      c = b.length,
-      d = new Uint8Array(new ArrayBuffer(c));
-    for (i = 0; i < c; i++) d[i] = b.charCodeAt(i);
-    return d;
-  };
-  var base64EncodeUint8Array = function (a) {
-    for (
-      var d,
-        e,
-        f,
-        g,
-        h,
-        i,
-        j,
-        b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
-        c = '',
-        k = 0;
-      k < a.length;
+    // Helper functions.
+    var base64DecodeUint8Array = function (a) {
+      var b = window.atob(a),
+        c = b.length,
+        d = new Uint8Array(new ArrayBuffer(c));
+      for (i = 0; i < c; i++) d[i] = b.charCodeAt(i);
+      return d;
+    };
+    var base64EncodeUint8Array = function (a) {
+      for (
+        var d,
+          e,
+          f,
+          g,
+          h,
+          i,
+          j,
+          b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=',
+          c = '',
+          k = 0;
+        k < a.length;
 
-    )
-      (d = a[k++]),
-        (e = k < a.length ? a[k++] : Number.NaN),
-        (f = k < a.length ? a[k++] : Number.NaN),
-        (g = d >> 2),
-        (h = ((3 & d) << 4) | (e >> 4)),
-        (i = ((15 & e) << 2) | (f >> 6)),
-        (j = 63 & f),
-        isNaN(e) ? (i = j = 64) : isNaN(f) && (j = 64),
-        (c += b.charAt(g) + b.charAt(h) + b.charAt(i) + b.charAt(j));
-    return c;
-  };
-  var arrayToString = function (a) {
-    var b = new Uint16Array(a.buffer);
-    return String.fromCharCode.apply(null, b);
-  };
-
-  function initPlayer(el) {
-    var manifestUrl = manifestUri;
-
-    var options = {
-      muted: false,
-      preload: 'auto',
-      autoplay: false,
-      loadingSpinner: true,
-      controlBar: {
-        captionsButton: false,
-        textTrackSettings: false,
-      },
+      )
+        (d = a[k++]),
+          (e = k < a.length ? a[k++] : Number.NaN),
+          (f = k < a.length ? a[k++] : Number.NaN),
+          (g = d >> 2),
+          (h = ((3 & d) << 4) | (e >> 4)),
+          (i = ((15 & e) << 2) | (f >> 6)),
+          (j = 63 & f),
+          isNaN(e) ? (i = j = 64) : isNaN(f) && (j = 64),
+          (c += b.charAt(g) + b.charAt(h) + b.charAt(i) + b.charAt(j));
+      return c;
+    };
+    var arrayToString = function (a) {
+      var b = new Uint16Array(a.buffer);
+      return String.fromCharCode.apply(null, b);
     };
 
-    // Init player.
-    var player = videojs(el.id, options);
-    // init drm plugin
-    player.eme();
+    function initPlayer(el) {
+      var manifestUrl = manifestUri;
 
-    // make plauer fluid
-    player.fluid(true);
-
-    // Push into instances
-    playerInstances.push(player);
-
-    // When ready
-    player.on('ready', function () {
-      // Set default quality
-      player.qualityMenu({
-        defaultResolution: 'auto',
-      });
-
-
-      // Setup dash + pr/wv
-      var wvprDashSrc = {
-        src: manifestUrl + '/manifest.mpd',
-        type: 'application/dash+xml',
-        keySystems: {
-          'com.widevine.alpha': {
-            url: adr_player_atts.drm_widevine_url,
-            videoRobustness: 'SW_SECURE_CRYPTO'
-        },
-          'com.microsoft.playready': adr_player_atts.drm_playready_urll,
+      var options = {
+        muted: false,
+        preload: 'auto',
+        autoplay: false,
+        loadingSpinner: true,
+        controlBar: {
+          captionsButton: false,
+          textTrackSettings: false,
         },
       };
 
-      player.src(wvprDashSrc);
-    });
+      // Init player.
+      var player = videojs(el.id, options);
+      // init drm plugin
+      player.eme();
 
-    // Sync Play and Pause
-    player.on('play', () => {
-      if (currentPlayer && currentPlayer !== player) {
-        currentPlayer.pause();
-      }
+      // make plauer fluid
+      player.fluid(true);
 
-      currentPlayer = player;
-    });
+      // Push into instances
+      playerInstances.push(player);
 
-    player.on('volumechange', function (evt) {
-      var isMuted = currentPlayer.muted();
+      // When ready
+      player.on('ready', function () {
+        // Set default quality
+        player.qualityMenu({
+          defaultResolution: 'auto',
+        });
 
-      playerInstances.forEach((p) => {
-        if (player !== p) {
-          p.muted(isMuted);
-        }
+
+        // Setup dash + pr/wv
+        var wvprDashSrc = {
+          src: manifestUrl + '/manifest.mpd',
+          type: 'application/dash+xml',
+          keySystems: {
+            'com.widevine.alpha': {
+              url: adr_player_atts.drm_widevine_url,
+              videoRobustness: 'SW_SECURE_CRYPTO'
+          },
+            'com.microsoft.playready': adr_player_atts.drm_playready_urll,
+          },
+        };
+
+        player.src(wvprDashSrc);
       });
-    });
-  }
 
-  for (var i = 0; i < players.length; i++) {
-    initPlayer(players[i]);
-  }
-})();
+      // Sync Play and Pause
+      player.on('play', () => {
+        if (currentPlayer && currentPlayer !== player) {
+          currentPlayer.pause();
+        }
+
+        currentPlayer = player;
+      });
+
+      player.on('volumechange', function (evt) {
+        var isMuted = currentPlayer.muted();
+
+        playerInstances.forEach((p) => {
+          if (player !== p) {
+            p.muted(isMuted);
+          }
+        });
+      });
+    }
+
+    for (var i = 0; i < players.length; i++) {
+      initPlayer(players[i]);
+    }
+  })();
 
 
 
-
-
-
-        (function() {
-
-            const manifestUri           = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
-            const hlsCertificateUrl     = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
-            const fairplayLicenseUri    = 'https://drm.adrennial.io?drm-type=fairplay';
-            const widevineLicenseUri    = 'https://drm.adrennial.io?drm-type=widevine';
-            const playreadyLicenseUri   = 'https://drm.adrennial.io?drm-type=playready';       
-
-            // Init player.
-            
-            var player = videojs('my-player');
-            
-            player.log()
-            player.eme();
-            player.on('ready', function() {
-                // Helper functions.
-                var base64DecodeUint8Array = function (a) { var b = window.atob(a), c = b.length, d = new Uint8Array(new ArrayBuffer(c)); for (i = 0; i < c; i++)d[i] = b.charCodeAt(i); return d };
-                var base64EncodeUint8Array = function (a) { for (var d, e, f, g, h, i, j, b = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=", c = "", k = 0; k < a.length;)d = a[k++], e = k < a.length ? a[k++] : Number.NaN, f = k < a.length ? a[k++] : Number.NaN, g = d >> 2, h = (3 & d) << 4 | e >> 4, i = (15 & e) << 2 | f >> 6, j = 63 & f, isNaN(e) ? i = j = 64 : isNaN(f) && (j = 64), c += b.charAt(g) + b.charAt(h) + b.charAt(i) + b.charAt(j); return c };
-                var arrayToString = function (a) { var b = new Uint16Array(a.buffer); return String.fromCharCode.apply(null, b) };
- 
-                // Setup hls + fp
-                var fairplayHlsSrc = {
-                    src: manifestUri+'/playlist.m3u8',
-                    type: 'application/x-mpegURL',
-                    keySystems: {
-                        'com.apple.fps.1_0': {
-                            certificateUri: hlsCertificateUrl,
- 
-                            getContentId: function (emeOptions, initData) {
-                                var contentId = arrayToString(initData);
- 
-                                if (contentId.indexOf("skd://") > -1)
-                                    return contentId.split("skd://")[1].substr(0, 32);
- 
-                                throw 'Invalid Content ID format. The format of the Content ID must be the following: skd://xxx where xxx is the Key ID in hex format.';
-                            },
- 
-                            getLicense: function (emeOptions, contentId, keyMessage, callback) {
-                                var data = 'spc=' + base64EncodeUint8Array(keyMessage) + '&assetId=' + contentId;
-                                $.ajax({
-                                    url: fairplayLicenseUri,
-                                    type: 'POST',
-                                    data: data,
-                                    // If you are using proxy, please, remove 'headers' object.
-                                    // headers: {
-                                    //     'customdata': 'your base64 encoded Authentication XML here that contains FP policies.'
-                                    // },
-                                    contentType: 'application/x-www-form-urlencoded',
-                                    success: function (result) {
-                                        callback(null, base64DecodeUint8Array(result));
-                                    },
-                                    error: function (err) {
-                                        callback(err);
-                                    }
-                                });
-                            }
-                        }
-                    }
-                };
-
-                // Setup dash + pr/wv
-                var wvprDashSrc = {
-                    src: manifestUri+'/manifest.mpd',
-                    type: 'application/dash+xml',
-                    keySystems: {
-                        'com.widevine.alpha': {
-                            url: widevineLicenseUri,
-                            audioRobustness: 'SW_SECURE_CRYPTO',
-                            videoRobustness: 'SW_SECURE_CRYPTO'
-                        },
-                        'com.microsoft.playready': playreadyLicenseUri
-                    }
-                };
- 
-                // Browser switch
-                 // Set the source to the player to init/start the playback.
-                if (videojs.browser.IS_ANY_SAFARI) {
-                    player.src(fairplayHlsSrc);
-                } else {
-                    player.src(wvprDashSrc);
-                }
-            });
-        })();
-    </script>
+</script>
   
 
 </body>
