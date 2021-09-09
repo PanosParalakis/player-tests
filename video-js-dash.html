@@ -9,7 +9,7 @@
     <link href="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs/7.5.4/video-js.min.css" rel="stylesheet">
     <link href="https://players.brightcove.net/videojs-quality-menu/1/videojs-quality-menu.css" rel='stylesheet'>
 
-    <script type="text/javascript" src="https://unpkg.com/bonejs@0.0.1/mux.js"></script>
+    <!-- <script type="text/javascript" src="https://unpkg.com/bonejs@0.0.1/mux.js"></script> -->
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs/7.5.4/video.min.js"></script>
     <script src="https://s3.amazonaws.com/cdn.keyos.com/html5/videojs-contrib-eme/3.5.4/videojs-contrib-eme.min.js"></script>
  
@@ -34,14 +34,13 @@
 
 (() => {
 
-    var adr_player_atts;
+    var adr_player_atts = {
+      drm_fairplay_cert_url: 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der',
+      drm_fairplay_url: 'https://drm.adrennial.io?drm-type=fairplay',
+      drm_widevine_url: 'https://drm.adrennial.io?drm-type=widevine',
+      drm_playready_url: 'https://drm.adrennial.io?drm-type=playready'
+    };
     const manifestUri           = 'https://video.adrennial.io/vod/_definst_/smil:http/adrennial-media-store-prod/videos/uG4g726Jc9MU4RbZySZI4c931yC2/videos/fvyacMCPuHnW6Lac1CMN/1ffe8617-50c1-4ab4-a436-bf6c9f15b1bb.smil';
-    adr_player_atts.drm_fairplay_cert_url   = 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der';
-    adr_player_atts.drm_fairplay_url    = 'https://drm.adrennial.io?drm-type=fairplay';
-    adr_player_atts.drm_widevine_url   = 'https://drm.adrennial.io?drm-type=widevine';
-    adr_player_atts.drm_playready_url  = 'https://drm.adrennial.io?drm-type=playready';    
-
-
     var players = document.getElementsByClassName('video-js');
     var currentPlayer = null;
     var playerInstances = [];
@@ -106,7 +105,6 @@
       player.eme();
 
       // make plauer fluid
-      player.fluid(true);
 
       // Push into instances
       playerInstances.push(player);
@@ -126,9 +124,10 @@
           keySystems: {
             'com.widevine.alpha': {
               url: adr_player_atts.drm_widevine_url,
-              videoRobustness: 'SW_SECURE_CRYPTO'
+              videoRobustness: 'SW_SECURE_CRYPTO',
+              audioRobustness: 'SW_SECURE_CRYPTO'
           },
-            'com.microsoft.playready': adr_player_atts.drm_playready_urll,
+            'com.microsoft.playready': adr_player_atts.drm_playready_url,
           },
         };
 
