@@ -99,11 +99,8 @@
           // you should add some error type condition here to
           // make sure that error you are handling is expiration
           console.log('the session expired, show a button to reload videojs');
-          $('.reload-video-btn').on('click', function() {
-            // this is how you reinitialize player
-            player.reset();
-            player.src(player.src())
-          });
+          player.reset();
+          player.src(player.src())
         }
 
         function initPlayer( el ) {
