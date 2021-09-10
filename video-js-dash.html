@@ -37,12 +37,12 @@
     <script type="text/javascript">
       ( () => {
 
-        // retry
-        videojs.hook('error', function(player, err) {
-          console.log(`player ${player.id()} has errored out with code ${err.code} ${err.message}`);
-          var src = player.src();
-          player.src(src);
-        });
+
+        // videojs.hook('error', function(player, err) {
+        //   console.log(`player ${player.id()} has errored out with code ${err.code} ${err.message}`);
+        //   var src = player.src();
+        //   player.src(src);
+        // });
 
         var adr_player_atts = {
           drm_fairplay_cert_url: 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der',
@@ -94,6 +94,17 @@
           var b = new Uint16Array( a.buffer );
           return String.fromCharCode.apply( null, b );
         };
+
+        function handleErrorEvent(player) {
+          // you should add some error type condition here to
+          // make sure that error you are handling is expiration
+          console.log('the session expired, show a button to reload videojs');
+          $('.reload-video-btn').on('click', function() {
+            // this is how you reinitialize player
+            player.reset();
+            player.src(player.src())
+          });
+        }
 
         function initPlayer( el ) {
           var manifestUrl = manifestUri;
@@ -163,7 +174,7 @@
             } );
           } );
 
-
+          player.on('error', handleErrorEvent(player));
         }
 
         for ( var i = 0; i < players.length; i++ ) {
