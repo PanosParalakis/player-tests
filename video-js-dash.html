@@ -37,6 +37,13 @@
     <script type="text/javascript">
       ( () => {
 
+        // retry
+        videojs.hook('error', function(player, err) {
+          console.log(`player ${player.id()} has errored out with code ${err.code} ${err.message}`);
+          var src = player.src();
+          player.src(src);
+        });
+
         var adr_player_atts = {
           drm_fairplay_cert_url: 'https://fp-keyos.licensekeyserver.com/cert/20096d104fe118369f7a409648e0ea92.der',
           drm_fairplay_url: 'https://drm.adrennial.io?drm-type=fairplay',
@@ -155,6 +162,8 @@
               }
             } );
           } );
+
+
         }
 
         for ( var i = 0; i < players.length; i++ ) {
